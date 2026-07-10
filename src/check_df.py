@@ -1,3 +1,41 @@
+import pandas as pd
+
+def compare_dfs(df_old, df_new):
+
+    # --- Row stats ---
+    rows_old = len(df_old)
+    rows_new = len(df_new)
+    row_diff = rows_new - rows_old
+    row_pct  = ((rows_new - rows_old) / rows_old * 100) if rows_old != 0 else float('inf')
+
+    # --- Column stats ---
+    cols_old = set(df_old.columns)
+    cols_new = set(df_new.columns)
+
+    only_in_old = cols_old - cols_new
+    only_in_new = cols_new - cols_old
+    in_both     = cols_old & cols_new
+
+    # --- Report ---
+    print("=" * 40)
+    print("ROW STATISTICS")
+    print("=" * 40)
+    print(f"  df_old rows : {rows_old:,}")
+    print(f"  df_new rows : {rows_new:,}")
+    print(f"  Difference  : {row_diff:+,}  ({'more' if row_diff > 0 else 'fewer' if row_diff < 0 else 'same'})")
+    print(f"  Change      : {row_pct:+.2f}%")
+
+    print()
+    print("=" * 40)
+    print("COLUMN STATISTICS")
+    print("=" * 40)
+    print(f"  df_old columns : {len(cols_old)}")
+    print(f"  df_new columns : {len(cols_new)}")
+    print(f"  In common      : {len(in_both)}")
+    print(f"  Only in df_old : {len(only_in_old)} -> {sorted(only_in_old) or 'none'}")
+    print(f"  Only in df_new : {len(only_in_new)} -> {sorted(only_in_new) or 'none'}")
+
+
 def check_primary_key(df, columns, verbose=False):
     if isinstance(columns, str):
         columns = [columns]

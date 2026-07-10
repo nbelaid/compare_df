@@ -61,8 +61,20 @@ def filter_and_sort(df1, df2, filter_dict, sort_cols,
         sort_cols_ordering = [True] * len(sort_cols)
 
     def _process(df):
+        # BigFrames DataFrames may have no index
+        try:
+            df = df.reset_index(drop=True)
+        except Exception:
+            pass  # Already has a valid index - skip
+
         df_filtered = filter_rows_by_dict(df, filter_dict)
-        df_sorted = df_filtered.sort_values(by=sort_cols, ascending=sort_cols_ordering)
+
+        # Guard against empty sort_cols, as can raise in BigFrames
+        if sort_cols:
+            df_sorted = df_filtered.sort_values(by=sort_cols, ascending=sort_cols_ordering)
+        else:
+            df_sorted = df_filtered
+
         print(f"Display a maximum of {max_rows_to_display}")
         display(df_sorted.head(max_rows_to_display))
         return df_sorted

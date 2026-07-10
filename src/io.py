@@ -38,7 +38,7 @@ def load_sample_files(bucket_name, sub_bucket, country, sf_folder_prefix):
 
 def read_sample_file(
     country, sf_folder_prefix, sf_name_prefix,
-    file_match_number=0, download=False, display_number_rows=1):
+    file_match_number=0, download=False, display_number_rows=3):
 
     # Build folder path
     folder_path_object = Path(f"{sf_folder_prefix}{country.lower()}")
@@ -57,6 +57,7 @@ def read_sample_file(
         sep="\t",          # or sep="," / "\t" depending on what you see
         engine="python"   # more forgiving parser
     )
+    print(f"Length: {len(df)} rows.")
     display(df.head(display_number_rows))
 
     if download:

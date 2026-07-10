@@ -7,8 +7,8 @@ from google.colab import files
 import pandas as pd
 
 
-def load_sample_files(bucket_name, country, sf_folder_prefix):
-    folder_path = f"{sf_folder_prefix}{country.lower()}"
+def load_sample_files(bucket_name, sub_bucket, country, sf_folder_prefix):
+    folder_path = f"{sub_bucket}/{sf_folder_prefix}{country.lower()}"
 
     extract_dir = f"{sf_folder_prefix}{country.lower()}"  # local subfolder to download into
     os.makedirs(extract_dir, exist_ok=True)

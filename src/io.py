@@ -1,7 +1,40 @@
+from xmlrpc import client
+
+from google.cloud import storage
 from pathlib import Path
 import os
 from google.colab import files
 import pandas as pd
+
+
+def load_sample_files(bucket_name, country, sf_folder_prefix):
+    folder_path = f"{sf_folder_prefix}{country.lower()}"
+
+    extract_dir = f"{sf_folder_prefix}{country.lower()}"  # local subfolder to download into
+    os.makedirs(extract_dir, exist_ok=True)
+
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+
+    # List all blobs (files) in the folder
+    blobs = bucket.list_blobs(prefix=folder_path + "/")
+
+    # Download each file
+    for blob in blobs:
+        # Skip if it's the folder itself (empty name after prefix)
+        if blob.name.endswith('/'):
+            continue
+
+        # Get the filename (without the folder path)
+        filename = blob.name.split('/')[-1]
+        local_path = os.path.join(extract_dir, filename)
+
+        # print(f"Downloading {blob.name} to {local_path}...")
+        blob.download_to_filename(local_path)
+        # print(f"Downloaded {filename}")
+
+    print(f"All files downloaded to {extract_dir}")
+
 
 def read_sample_file(
     country, sf_folder_prefix, sf_name_prefix,

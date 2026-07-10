@@ -71,3 +71,13 @@ def filter_and_sort(df1, df2, filter_dict, sort_cols,
     df2_out = _process(df2)
 
     return df1_out, df2_out
+
+
+def rename_columns(df, rename_dict):
+    missing = [col for col in rename_dict if col not in df.columns]
+    if missing:
+        print(f"  Warning: these columns were not found and skipped -> {missing}")
+
+    df = df.rename(columns=rename_dict)
+    print(f"  Successfully renamed {len(rename_dict) - len(missing)} column(s).")
+    return df

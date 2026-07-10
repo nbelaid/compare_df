@@ -4,8 +4,12 @@ from google.cloud import storage
 from pathlib import Path
 import os
 from google.colab import files
-import pandas as pd
 
+import pandas as pd
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.width', None)
+pd.set_option('display.max_colwidth', None)
 
 def load_sample_files(bucket_name, sub_bucket, country, sf_folder_prefix):
     folder_path = f"{sub_bucket}/{sf_folder_prefix}{country.lower()}"

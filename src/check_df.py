@@ -35,151 +35,42 @@ def compare_dfs_stats(df_old, df_new):
     print(f"  Only in df_new : {len(only_in_new)} -> {sorted(only_in_new) or 'none'}")
 
 
-def compare_dfs_rows(df1: pd.DataFrame, df2: pd.DataFrame,
-                       df1_name: str = "DataFrame 1",
-                       df2_name: str = "DataFrame 2") -> dict:
-    """
-    Compare two pandas DataFrames:
-      - Keeps only common columns
-      - Sorts both by common columns
-      - Reports common rows count and percentage
-      - Shows up to 5 rows exclusive to each DataFrame
-
-    Parameters
-    ----------
-    df1       : First  DataFrame
-    df2       : Second DataFrame
-    df1_name  : Label for df1 (used in display)
-    df2_name  : Label for df2 (used in display)
-
-    Returns
-    -------
-    dict with keys:
-        'common_columns'   : list of shared column names
-        'common_rows'      : DataFrame of rows present in both
-        'only_in_df1'      : DataFrame of rows only in df1
-        'only_in_df2'      : DataFrame of rows only in df2
-        'stats'            : dict with counts and percentages
-    """
-
-    # ------------------------------------------------------------------
-    # 1. Common columns
-    # ------------------------------------------------------------------
+def compare_dataframes(df1, df2, name1="DF1", name2="DF2"):
+    # --- 1. Keep only common columns ---
     common_cols = sorted(set(df1.columns) & set(df2.columns))
+    a = df1[common_cols].copy()
+    b = df2[common_cols].copy()
 
-    if not common_cols:
-        raise ValueError("The two DataFrames share NO common columns.")
+    # --- 2. Fix dtype mismatches (e.g. pyarrow vs object) ---
+    for col in common_cols:
+        if a[col].dtype != b[col].dtype:
+            a[col] = a[col].astype(str)
+            b[col] = b[col].astype(str)
 
-    dropped_df1 = [c for c in df1.columns if c not in common_cols]
-    dropped_df2 = [c for c in df2.columns if c not in common_cols]
+    # --- 3. Sort both ---
+    a = a.sort_values(common_cols).reset_index(drop=True)
+    b = b.sort_values(common_cols).reset_index(drop=True)
 
-    df1_c = df1[common_cols].copy()
-    df2_c = df2[common_cols].copy()
+    # --- 4. Compare rows ---
+    merged = pd.merge(a, b, on=common_cols, how="outer", indicator=True)
+    common = merged[merged["_merge"] == "both"].drop(columns="_merge")
+    only_a = merged[merged["_merge"] == "left_only"].drop(columns="_merge")
+    only_b = merged[merged["_merge"] == "right_only"].drop(columns="_merge")
 
-    # ------------------------------------------------------------------
-    # 2. Sort both by all common columns
-    # ------------------------------------------------------------------
-    df1_c = df1_c.sort_values(by=common_cols).reset_index(drop=True)
-    df2_c = df2_c.sort_values(by=common_cols).reset_index(drop=True)
+    # --- 5. Print report ---
+    n1, n2, nc = len(a), len(b), len(common)
+    print(f"Common columns ({len(common_cols)}): {common_cols}")
+    print(f"\n{name1}: {n1} rows  |  {name2}: {n2} rows")
+    print(f"Common rows:  {nc}  ({nc/n1*100:.1f}% of {name1}  |  {nc/n2*100:.1f}% of {name2})")
+    print(f"Only in {name1}: {len(only_a)}  |  Only in {name2}: {len(only_b)}")
 
-    # ------------------------------------------------------------------
-    # 3. Find common / exclusive rows  (merge-based, handles duplicates)
-    # ------------------------------------------------------------------
-    df1_c["_src"] = "df1"
-    df2_c["_src"] = "df2"
+    print(f"\n--- 5 rows only in {name1} ---")
+    print(only_a.head(5).to_string(index=False) if len(only_a) else "none")
 
-    merged = pd.merge(
-        df1_c.drop(columns="_src"),
-        df2_c.drop(columns="_src"),
-        on=common_cols,
-        how="outer",
-        indicator=True
-    )
+    print(f"\n--- 5 rows only in {name2} ---")
+    print(only_b.head(5).to_string(index=False) if len(only_b) else "none")
 
-    common_rows  = merged[merged["_merge"] == "both"].drop(columns="_merge")
-    only_in_df1  = merged[merged["_merge"] == "left_only"].drop(columns="_merge")
-    only_in_df2  = merged[merged["_merge"] == "right_only"].drop(columns="_merge")
-
-    df1_c = df1_c.drop(columns="_src")
-    df2_c = df2_c.drop(columns="_src")
-
-    # ------------------------------------------------------------------
-    # 4. Stats
-    # ------------------------------------------------------------------
-    n_df1    = len(df1_c)
-    n_df2    = len(df2_c)
-    n_common = len(common_rows)
-    n_only1  = len(only_in_df1)
-    n_only2  = len(only_in_df2)
-
-    pct_of_df1 = (n_common / n_df1  * 100) if n_df1  else 0.0
-    pct_of_df2 = (n_common / n_df2  * 100) if n_df2  else 0.0
-    pct_of_union = (n_common / (n_df1 + n_df2 - n_common) * 100) \
-                   if (n_df1 + n_df2 - n_common) else 0.0
-
-    stats = {
-        f"rows_in_{df1_name}"  : n_df1,
-        f"rows_in_{df2_name}"  : n_df2,
-        "common_rows"          : n_common,
-        f"pct_of_{df1_name}"   : round(pct_of_df1,   2),
-        f"pct_of_{df2_name}"   : round(pct_of_df2,   2),
-        "pct_of_union"         : round(pct_of_union, 2),
-        f"only_in_{df1_name}"  : n_only1,
-        f"only_in_{df2_name}"  : n_only2,
-    }
-
-    # ------------------------------------------------------------------
-    # 5. Pretty print
-    # ------------------------------------------------------------------
-    sep = "=" * 60
-
-    print(sep)
-    print("  DATAFRAME COMPARISON REPORT")
-    print(sep)
-
-    print(f"\n{'COLUMNS':}")
-    print(f"  Common columns ({len(common_cols)})  : {common_cols}")
-    if dropped_df1:
-        print(f"  Dropped from {df1_name}  : {dropped_df1}")
-    if dropped_df2:
-        print(f"  Dropped from {df2_name}  : {dropped_df2}")
-
-    print(f"\nROW COUNTS")
-    print(f"  {df1_name:<20}: {n_df1:>6} rows")
-    print(f"  {df2_name:<20}: {n_df2:>6} rows")
-    print(f"  Common rows         : {n_common:>6} rows  "
-          f"({pct_of_df1:.1f}% of {df1_name} | "
-          f"{pct_of_df2:.1f}% of {df2_name} | "
-          f"{pct_of_union:.1f}% of union)")
-
-    print(f"\n  Only in {df1_name:<15}: {n_only1:>6} rows")
-    print(f"  Only in {df2_name:<15}: {n_only2:>6} rows")
-
-    # Sample exclusive rows
-    sample = 5
-    print(f"\n{sep}")
-    print(f"  UP TO {sample} ROWS ONLY IN '{df1_name.upper()}'")
-    print(sep)
-    print(only_in_df1.head(sample).to_string(index=False)
-          if n_only1 else "  (none)")
-
-    print(f"\n{sep}")
-    print(f"  UP TO {sample} ROWS ONLY IN '{df2_name.upper()}'")
-    print(sep)
-    print(only_in_df2.head(sample).to_string(index=False)
-          if n_only2 else "  (none)")
-
-    print(f"\n{sep}\n")
-
-    return {
-        "common_columns" : common_cols,
-        "df1_sorted"     : df1_c,
-        "df2_sorted"     : df2_c,
-        "common_rows"    : common_rows,
-        "only_in_df1"    : only_in_df1,
-        "only_in_df2"    : only_in_df2,
-        "stats"          : stats,
-    }
+    return {"common": common, "only_in_df1": only_a, "only_in_df2": only_b}
 
 
 def check_primary_key(df, columns, verbose=False):

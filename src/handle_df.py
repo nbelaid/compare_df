@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-def cast_cols(df1, df2, cols_int=[], cols_float=[], cols_dt=[]):
+def cast_cols(df1, df2, cols_int_2_str=[], cols_float_2_str=[], cols_dt_2_str=[]):
     df_list = [df1, df2]
     for df in df_list:
         # Column cast int to str

@@ -35,9 +35,9 @@ def compare_dfs_stats(df_old, df_new):
     print(f"  Only in df_new : {len(only_in_new)} -> {sorted(only_in_new) or 'none'}")
 
 
-def compare_dfs_rows(df1, df2, name1="df_old", name2="df_new"):
-    # --- 1. Keep only common columns ---
-    common_cols = sorted(set(df1.columns) & set(df2.columns))
+def compare_dfs_rows(df1, df2, name1="df_old", name2="df_new", exclude_cols=[]):
+    # --- 1. Keep only common columns, minus excluded ones ---
+    common_cols = sorted(set(df1.columns) & set(df2.columns) - set(exclude_cols))
     a = df1[common_cols].copy()
     b = df2[common_cols].copy()
 
@@ -59,6 +59,8 @@ def compare_dfs_rows(df1, df2, name1="df_old", name2="df_new"):
 
     # --- 5. Print report ---
     n1, n2, nc = len(a), len(b), len(common)
+    if exclude_cols:
+        print(f"Excluded columns: {exclude_cols}")
     print(f"Common columns ({len(common_cols)}): {common_cols}")
     print(f"\n{name1}: {n1} rows  |  {name2}: {n2} rows")
     print(f"Common rows:  {nc}  ({nc/n1*100:.1f}% of {name1}  |  {nc/n2*100:.1f}% of {name2})")
@@ -69,8 +71,6 @@ def compare_dfs_rows(df1, df2, name1="df_old", name2="df_new"):
 
     print(f"\n--- 5 rows only in {name2} ---")
     print(only_b.head(5).to_string(index=False) if len(only_b) else "none")
-
-    return {"common": common, "only_in_df1": only_a, "only_in_df2": only_b}
 
 
 def check_primary_key(df, columns, verbose=False):

@@ -78,7 +78,7 @@ def compare_dfs_rows(df1, df2, name1="df_old", name2="df_new", exclude_cols=[]):
     return common, only_old, only_new
 
 
-def compare_df_single_row(df1, df2, key_cols, key_values,
+def compare_dfs_one_row(df1, df2, key_cols, key_values,
                  name1="df_old", name2="df_new",
                  exclude_cols=[]):
 

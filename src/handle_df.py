@@ -91,14 +91,29 @@ def filter_rows_by_dict(df, filter_dict, reset_index=True):
   
 
 def filter_and_sort(df1, df2, filter_dict, max_rows_to_display=3, sort_cols=None,
-                    sort_cols_ordering=None):
+                    sort_cols_ordering=None, select_cols=None):
     """
     Filter and sort two DataFrames in the same way, then display and return them.
+
+    Parameters
+    ----------
+    df1, df2            : DataFrames to process.
+    filter_dict         : Dict of {col: value} filters passed to filter_rows_by_dict.
+    max_rows_to_display : Max rows shown (default 3).
+    sort_cols           : Columns to sort by.
+    sort_cols_ordering  : List of booleans (True=asc). Defaults to all True.
+    select_cols         : str or list of str - columns to keep before displaying.
+                          If a single column is selected, prints value + type per row
+                          instead of a DataFrame display.
     """
     if (sort_cols_ordering is None) and (sort_cols is not None):
         sort_cols_ordering = [True] * len(sort_cols)
 
-    def _process(df):
+    # --- normalize select_cols ---
+    if isinstance(select_cols, str):
+        select_cols = [select_cols]
+
+    def _process(df, label):
         # BigFrames DataFrames may have no index
         try:
             df = df.reset_index(drop=True)
@@ -113,15 +128,35 @@ def filter_and_sort(df1, df2, filter_dict, max_rows_to_display=3, sort_cols=None
         else:
             df_sorted = df_filtered
 
-        print(f"Display a maximum of {max_rows_to_display}")
-        display(df_sorted.head(max_rows_to_display))
+        # --- apply column selection ---
+        if select_cols:
+            missing = [c for c in select_cols if c not in df_sorted.columns]
+            if missing:
+                print(f"  [WARNING] Columns not found and skipped: {missing}")
+            valid_cols = [c for c in select_cols if c in df_sorted.columns]
+            df_display = df_sorted[valid_cols]
+        else:
+            df_display = df_sorted
+
+        df_head = df_display.head(max_rows_to_display)
+        print(f"[{label}] Displaying max {max_rows_to_display} of {len(df_sorted)} row(s)")
+
+        # --- single-column: show value + type per row ---
+        if select_cols and len(valid_cols) == 1:
+            col = valid_cols[0]
+            print(f"  Column: '{col}'")
+            for i, val in enumerate(df_head[col]):
+                print(f"  row {i} -> repr : {repr(val)}")
+                print(f"          type : {type(val).__name__}")
+        else:
+            display(df_head)
+
         return df_sorted
 
-    df1_out = _process(df1)
-    df2_out = _process(df2)
+    df1_out = _process(df1, "df1")
+    df2_out = _process(df2, "df2")
 
     return df1_out, df2_out
-
 
 def rename_columns(df, rename_dict):
     missing = [col for col in rename_dict if col not in df.columns]

@@ -35,7 +35,7 @@ def compare_dfs_stats(df_old, df_new):
     print(f"  Only in df_new : {len(only_in_new)} -> {sorted(only_in_new) or 'none'}")
 
 
-def compare_dataframes(df1, df2, name1="DF1", name2="DF2"):
+def compare_dfs_rows(df1, df2, name1="DF1", name2="DF2"):
     # --- 1. Keep only common columns ---
     common_cols = sorted(set(df1.columns) & set(df2.columns))
     a = df1[common_cols].copy()

@@ -75,6 +75,7 @@ def compare_dfs_rows(df1, df2, name1="df_old", name2="df_new", exclude_cols=[]):
     print(f"\n--- 5 rows only in {name2} ---")
     print(only_b[common_cols].head(5).to_string(index=False) if len(only_b) else "none")
 
+    return {"common": common, "only_in_df1": only_a, "only_in_df2": only_b}
 
 
 def check_primary_key(df, columns, verbose=False):

@@ -2,57 +2,56 @@ import numpy as np
 import pandas as pd
 
 
-# --- Sub-functions ---
-
-def _cast_int_2_str(series):
-    return (
-        series
-        .replace("<NA>", np.nan)
-        .pipe(lambda s: pd.to_numeric(s, errors="coerce"))
-        .astype("Int64")
-        .astype(str)
-    )
-
-
-def _cast_float_2_str(series):
-    if pd.api.types.is_string_dtype(series):
-        series = (
-            series
-            .str.replace("'", "", regex=False)
-            .str.replace(" ", "", regex=False)
-            .str.replace(",", ".", regex=False)
-        )
-    return series.astype(float).map("{:.2f}".format)
-
-
-def _cast_dt_2_str(series):
-    if pd.api.types.is_string_dtype(series):
-        try:
-            series = pd.to_datetime(series, format="%d.%m.%Y")
-        except (ValueError, TypeError):
-            return series   # leave untouched if parse fails
-    return series.astype(str)
-
-
-
 def cast_cols(df1, df2, cols_int_2_str=[], cols_float_2_str=[], cols_dt_2_str=[]):
-    df_list = [df1, df2]
+
+    # --- Sub-functions ---
+
+    def cast_int_2_str(series):
+        return (
+            series
+            .replace("<NA>", np.nan)
+            .pipe(lambda s: pd.to_numeric(s, errors="coerce"))
+            .astype("Int64")
+            .astype(str)
+            .str.strip()
+        )
+
+    def cast_float_2_str(series):
+        if pd.api.types.is_string_dtype(series):
+            series = (
+                series
+                .str.replace("'", "", regex=False)
+                .str.replace(" ", "", regex=False)
+                .str.replace(",", ".", regex=False)
+            )
+        return series.astype(float).map("{:.2f}".format).str.strip()
+
+    def cast_dt_2_str(series):
+        if pd.api.types.is_string_dtype(series):
+            try:
+                series = pd.to_datetime(series, format="%d.%m.%Y")
+            except (ValueError, TypeError):
+                return series.str.strip()
+        return series.astype(str).str.strip()
+
+    # --- Main logic ---
+
     explicit_cols = set(cols_int_2_str) | set(cols_float_2_str) | set(cols_dt_2_str)
 
-    for df in df_list:
+    for df in [df1, df2]:
 
         # --- explicit casts ---
         for col in cols_int_2_str:
             print(f"  [int -> str] {col}")
-            df[col] = _cast_int_2_str(df[col])
+            df[col] = cast_int_2_str(df[col])
 
         for col in cols_float_2_str:
             print(f"  [float -> str] {col}")
-            df[col] = _cast_float_2_str(df[col])
+            df[col] = cast_float_2_str(df[col])
 
         for col in cols_dt_2_str:
             print(f"  [dt -> str] {col}")
-            df[col] = _cast_dt_2_str(df[col])
+            df[col] = cast_dt_2_str(df[col])
 
         # --- auto-route remaining columns ---
         for col in [c for c in df.columns if c not in explicit_cols]:
@@ -60,19 +59,19 @@ def cast_cols(df1, df2, cols_int_2_str=[], cols_float_2_str=[], cols_dt_2_str=[]
 
             if pd.api.types.is_integer_dtype(series):
                 print(f"  [auto int -> str] {col} ({series.dtype})")
-                df[col] = _cast_int_2_str(series)
+                df[col] = cast_int_2_str(series)
 
             elif pd.api.types.is_float_dtype(series):
                 print(f"  [auto float -> str] {col} ({series.dtype})")
-                df[col] = _cast_float_2_str(series)
+                df[col] = cast_float_2_str(series)
 
             elif pd.api.types.is_datetime64_any_dtype(series):
                 print(f"  [auto dt -> str] {col} ({series.dtype})")
-                df[col] = _cast_dt_2_str(series)
+                df[col] = cast_dt_2_str(series)
 
             else:
                 print(f"  [auto -> str] {col} ({series.dtype})")
-                df[col] = series.astype(str)
+                df[col] = series.astype(str).str.strip()
 
     return df1, df2
 

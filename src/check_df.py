@@ -57,8 +57,8 @@ def compare_dfs_rows(df1, df2, name1="df_old", name2="df_new", exclude_cols=[]):
     # --- 4. Compare rows ---
     merged = pd.merge(a, b, on=common_cols, how="outer", indicator=True)
     common = merged[merged["_merge"] == "both"].drop(columns="_merge")
-    only_a = merged[merged["_merge"] == "left_only"].drop(columns="_merge")
-    only_b = merged[merged["_merge"] == "right_only"].drop(columns="_merge")
+    only_old = merged[merged["_merge"] == "left_only"].drop(columns="_merge")
+    only_new = merged[merged["_merge"] == "right_only"].drop(columns="_merge")
 
     # --- 5. Print report ---
     n1, n2, nc = len(a), len(b), len(common)
@@ -67,15 +67,15 @@ def compare_dfs_rows(df1, df2, name1="df_old", name2="df_new", exclude_cols=[]):
     print(f"Common columns ({len(common_cols)}) in {name1} order: {common_cols}")
     print(f"\n{name1}: {n1} rows  |  {name2}: {n2} rows")
     print(f"Common rows:  {nc}  ({nc/n1*100:.1f}% of {name1}  |  {nc/n2*100:.1f}% of {name2})")
-    print(f"Only in {name1}: {len(only_a)}  |  Only in {name2}: {len(only_b)}")
+    print(f"Only in {name1}: {len(only_old)}  |  Only in {name2}: {len(only_new)}")
 
     print(f"\n--- 5 rows only in {name1} ---")
-    print(only_a[common_cols].head(5).to_string(index=False) if len(only_a) else "none")
+    print(only_old[common_cols].head(5).to_string(index=False) if len(only_old) else "none")
 
     print(f"\n--- 5 rows only in {name2} ---")
-    print(only_b[common_cols].head(5).to_string(index=False) if len(only_b) else "none")
+    print(only_new[common_cols].head(5).to_string(index=False) if len(only_new) else "none")
 
-    return {"common": common, "only_in_df1": only_a, "only_in_df2": only_b}
+    return common, only_old, only_new
 
 
 def check_primary_key(df, columns, verbose=False):

@@ -90,8 +90,9 @@ def filter_rows_by_dict(df, filter_dict, reset_index=True):
     return result.reset_index(drop=True) if reset_index else result
   
 
-def filter_and_sort(df1, df2, filter_dict, max_rows_to_display=3, sort_cols=None,
-                    sort_cols_ordering=None, select_cols=None):
+def filter_and_sort(df1, df2, filter_dict, select_cols=None, 
+                    max_rows_to_display=3, sort_cols=None,
+                    sort_cols_ordering=None, ):
     """
     Filter and sort two DataFrames in the same way, then display and return them.
 

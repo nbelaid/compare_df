@@ -52,12 +52,12 @@ def filter_rows_by_dict(df, filter_dict, reset_index=True):
     return result.reset_index(drop=True) if reset_index else result
   
 
-def filter_and_sort(df1, df2, filter_dict, sort_cols,
-                    sort_cols_ordering=None, max_rows_to_display=10):
+def filter_and_sort(df1, df2, filter_dict, max_rows_to_display=3, sort_cols=None,
+                    sort_cols_ordering=None):
     """
     Filter and sort two DataFrames in the same way, then display and return them.
     """
-    if sort_cols_ordering is None:
+    if (sort_cols_ordering is None) and (sort_cols is not None):
         sort_cols_ordering = [True] * len(sort_cols)
 
     def _process(df):

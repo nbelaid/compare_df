@@ -36,10 +36,13 @@ def compare_dfs_stats(df_old, df_new):
 
 
 def compare_dfs_rows(df1, df2, name1="df_old", name2="df_new", exclude_cols=[]):
-    # --- 1. Keep only common columns, minus excluded ones ---
-    common_cols = sorted(set(df1.columns) & set(df2.columns) - set(exclude_cols))
+
+    # --- 1. Common columns in df_old order, minus excluded ones ---
+    excluded = set(exclude_cols)
+    common_cols = [col for col in df1.columns if col in set(df2.columns) - excluded]
+
     a = df1[common_cols].copy()
-    b = df2[common_cols].copy()
+    b = df2[common_cols].copy()  # df_new is now reordered to match df_old
 
     # --- 2. Fix dtype mismatches (e.g. pyarrow vs object) ---
     for col in common_cols:
@@ -47,7 +50,7 @@ def compare_dfs_rows(df1, df2, name1="df_old", name2="df_new", exclude_cols=[]):
             a[col] = a[col].astype(str)
             b[col] = b[col].astype(str)
 
-    # --- 3. Sort both ---
+    # --- 3. Sort both (by common cols, in df_old order) ---
     a = a.sort_values(common_cols).reset_index(drop=True)
     b = b.sort_values(common_cols).reset_index(drop=True)
 
@@ -61,16 +64,17 @@ def compare_dfs_rows(df1, df2, name1="df_old", name2="df_new", exclude_cols=[]):
     n1, n2, nc = len(a), len(b), len(common)
     if exclude_cols:
         print(f"Excluded columns: {exclude_cols}")
-    print(f"Common columns ({len(common_cols)}): {common_cols}")
+    print(f"Common columns ({len(common_cols)}) in {name1} order: {common_cols}")
     print(f"\n{name1}: {n1} rows  |  {name2}: {n2} rows")
     print(f"Common rows:  {nc}  ({nc/n1*100:.1f}% of {name1}  |  {nc/n2*100:.1f}% of {name2})")
     print(f"Only in {name1}: {len(only_a)}  |  Only in {name2}: {len(only_b)}")
 
     print(f"\n--- 5 rows only in {name1} ---")
-    print(only_a.head(5).to_string(index=False) if len(only_a) else "none")
+    print(only_a[common_cols].head(5).to_string(index=False) if len(only_a) else "none")
 
     print(f"\n--- 5 rows only in {name2} ---")
-    print(only_b.head(5).to_string(index=False) if len(only_b) else "none")
+    print(only_b[common_cols].head(5).to_string(index=False) if len(only_b) else "none")
+
 
 
 def check_primary_key(df, columns, verbose=False):

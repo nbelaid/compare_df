@@ -40,21 +40,9 @@ def compare_dfs_stats(df1, df2, name1="df1", name2="df2"):
     print(f"  In common       : {len(in_both)}")
     print(f"  Only in {name1}  : {len(only_in_1)} -> {sorted(only_in_1) or 'none'}")
     print(f"  Only in {name2}  : {len(only_in_2)} -> {sorted(only_in_2) or 'none'}")
-
-    print()
-    print("=" * 40)
-    print("DTYPE MISMATCHES")
-    print("=" * 40)
-    if dtype_mismatches:
-        print(f"  {'Column':<30} {name1:<20} {name2:<20}")
-        print(f"  {'-'*30} {'-'*20} {'-'*20}")
-        for col, (t1, t2) in sorted(dtype_mismatches.items()):
-            print(f"  {col:<30} {str(t1):<20} {str(t2):<20}")
-    else:
-        print("  All shared columns have matching dtypes")
-    print(f"  Mismatches: {len(dtype_mismatches)}")
     
-        
+
+
 def compare_dfs_rows(df1, df2, name1="df_old", name2="df_new", exclude_cols=[]):
 
     # --- 1. Common columns in df_old order, minus excluded ones ---

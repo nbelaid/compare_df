@@ -22,8 +22,7 @@ def compare_dfs(df_old, df_new):
     print("=" * 40)
     print(f"  df_old rows : {rows_old:,}")
     print(f"  df_new rows : {rows_new:,}")
-    print(f"  Difference  : {row_diff:+,}  ({'more' if row_diff > 0 else 'fewer' if row_diff < 0 else 'same'})")
-    print(f"  Change      : {row_pct:+.2f}%")
+    print(f"  Difference  : {row_diff:+,}  ({row_pct:+.2f}%)")
 
     print()
     print("=" * 40)

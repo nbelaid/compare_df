@@ -78,6 +78,56 @@ def compare_dfs_rows(df1, df2, name1="df_old", name2="df_new", exclude_cols=[]):
     return common, only_old, only_new
 
 
+def compare_df_single_row(df1, df2, key_cols, key_values,
+                 name1="df_old", name2="df_new",
+                 exclude_cols=[]):
+
+    # --- normalize inputs ---
+    if isinstance(key_cols, str):
+        key_cols = [key_cols]
+    if not isinstance(key_values, list):
+        key_values = [key_values]
+    key_values = [v if isinstance(v, tuple) else (v,) for v in key_values]
+
+    # --- common columns, minus excluded ---
+    excluded = set(exclude_cols)
+    common_cols = [c for c in df1.columns if c in set(df2.columns) - excluded]
+
+    # --- filter rows ---
+    def _filter(df):
+        mask = df[key_cols].apply(tuple, axis=1).isin(key_values)
+        return df.loc[mask, common_cols].reset_index(drop=True)
+
+    a = _filter(df1)
+    b = _filter(df2)
+
+    print(f"Key {key_cols} = {key_values}")
+    print(f"Rows matched -> {name1}: {len(a)}  |  {name2}: {len(b)}")
+    if exclude_cols:
+        print(f"Excluded cols: {exclude_cols}")
+
+    # --- compare value by value ---
+    rows = []
+    for i in range(min(len(a), len(b))):
+        for col in common_cols:
+            v1, v2 = a.at[i, col], b.at[i, col]
+            try:
+                same = bool(v1 == v2)
+            except Exception:
+                same = str(v1) == str(v2)   # fallback for mixed dtypes
+            rows.append({"row": i, "column": col, name1: v1, name2: v2, "match": same})
+
+    diff = pd.DataFrame(rows)
+    changed = diff[~diff["match"]]
+
+    print(f"\nChanged: {len(changed)}  |  Identical: {len(diff) - len(changed)}\n")
+    print("--- Differences ---")
+    cols_to_show = ["column", name1, name2] if len(a) == 1 else ["row", "column", name1, name2]
+    print(changed[cols_to_show].to_string(index=False) if len(changed) else "  (none - rows are identical)")
+
+    return diff
+
+
 def check_primary_key(df, columns, verbose=False):
     if isinstance(columns, str):
         columns = [columns]

@@ -6,7 +6,7 @@ def cast_cols(df1, df2, cols_int_2_str=[], cols_float_2_str=[], cols_dt_2_str=[]
     df_list = [df1, df2]
     for df in df_list:
         # Column cast int to str
-        for col in cols_int:
+        for col in cols_int_2_str:
             print(f"Trying to cast col: {col}.")
             df[col] = df[col].replace('<NA>', np.nan)
             df[col] = df[col].astype(float)
@@ -14,7 +14,7 @@ def cast_cols(df1, df2, cols_int_2_str=[], cols_float_2_str=[], cols_dt_2_str=[]
             df[col] = df[col].astype(str)
 
         # Column cast float to str
-        for col in cols_float:
+        for col in cols_float_2_str:
             print(f"Trying to cast col: {col}.")
             if pd.api.types.is_string_dtype(df[col]):
                 df[col] = (
@@ -26,7 +26,7 @@ def cast_cols(df1, df2, cols_int_2_str=[], cols_float_2_str=[], cols_dt_2_str=[]
             df[col] = df[col].astype(float).map("{:.2f}".format)
 
         # Column cast to date
-        for col in cols_dt:
+        for col in cols_dt_2_str:
             print(f"Trying to cast col: {col}.")
             if pd.api.types.is_string_dtype(df[col]):
                 try: # try to convert using the given format

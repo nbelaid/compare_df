@@ -41,11 +41,11 @@ def load_sample_files(bucket_name, sub_bucket, sf_folder):
 
 
 def read_sample_file(
-    country, sf_folder_prefix, sf_name_prefix,
+    sf_folder, sf_name_prefix,
     file_match_number=0, download=False, display_number_rows=3):
 
     # Build folder path
-    folder_path_object = Path(f"{sf_folder_prefix}{country.lower()}")
+    folder_path_object = Path(f"{sf_folder}")
 
     # Get the first CSV whose name starts with the prefix
     matches = list(folder_path_object.glob(f"{sf_name_prefix}*.txt"))

@@ -11,10 +11,10 @@ pd.set_option('display.max_columns', None)
 pd.set_option('display.width', None)
 pd.set_option('display.max_colwidth', None)
 
-def load_sample_files(bucket_name, sub_bucket, country, sf_folder_prefix):
-    folder_path = f"{sub_bucket}/{sf_folder_prefix}{country.lower()}"
+def load_sample_files(bucket_name, sub_bucket, sf_folder):
+    folder_path = f"{sub_bucket}/{sf_folder}"
 
-    extract_dir = f"{sf_folder_prefix}{country.lower()}"  # local subfolder to download into
+    extract_dir = f"{sf_folder}"  # local subfolder to download into
     os.makedirs(extract_dir, exist_ok=True)
 
     client = storage.Client()
